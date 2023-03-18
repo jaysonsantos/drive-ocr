@@ -32,8 +32,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          rustup target add aarch64-unknown-linux-musl
           rustup override add nightly
+          rustup target add aarch64-unknown-linux-musl
           wget https://github.com/sharkdp/fd/releases/download/v8.7.0/fd_8.7.0_amd64.deb -O fd.deb
           sudo dpkg -i fd.deb
           wget https://github.com/rust-cross/cargo-zigbuild/releases/download/v0.16.3/cargo-zigbuild-v0.16.3.x86_64-unknown-linux-musl.tar.gz \
