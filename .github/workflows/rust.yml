@@ -41,7 +41,8 @@ jobs:
           tar zxvf cargo-zigbuild.tar.gz
           sudo mv cargo-zigbuild /usr/local/bin/
           sudo apt update
-          sudo apt install -y protobuf-compiler ocrmypdf          
+          sudo apt install -y protobuf-compiler ocrmypdf    
+          sudo snap install zig --classic --edge      
 
       - name: Install Buildx
         uses: docker/setup-buildx-action@v1
