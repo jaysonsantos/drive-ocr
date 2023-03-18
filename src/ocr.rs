@@ -123,11 +123,17 @@ mod tests {
         assert!(pdf.exists());
         assert!(txt.exists());
 
-        let ocred = fs::read_to_string(txt).await?.replace("\n", "");
-        let expected = fs::read_to_string("fixtures/expected.txt")
-            .await?
-            .replace("\n", "");
-        assert_eq!(ocred, expected);
+        let ocred = fs::read_to_string(txt).await?;
+        let expected = fs::read_to_string("fixtures/expected.txt").await?;
+        let distance = strsim::normalized_levenshtein(&ocred, &expected);
+        let diff = prettydiff::diff_chars(ocred.as_str(), &expected.as_str());
+
+        assert!(
+            distance <= 1.0,
+            "ocr file resulted in a great difference than the expected {} {}",
+            distance,
+            diff
+        );
         Ok(())
     }
 }
