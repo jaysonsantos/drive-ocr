@@ -27,7 +27,8 @@ target/$(ARCH)/$(TARGET)/drive-ocr: $(RUST_FILES)
 
 .PHONY = copy-all-targets
 copy-all-targets: build-all-targets
-	@mkdir -p .cache/docker-build/{amd64,arm64}
+	@mkdir -p .cache/docker-build/amd64
+	@mkdir -p .cache/docker-build/arm64
 	@cp target/x86_64-unknown-linux-musl/release/drive-ocr .cache/docker-build/amd64/
 	@cp target/aarch64-unknown-linux-musl/release/drive-ocr .cache/docker-build/arm64/
 
