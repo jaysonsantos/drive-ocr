@@ -79,8 +79,6 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: build-artifacts
-      - name: List
-        run: find
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Install Buildx
@@ -102,8 +100,8 @@ jobs:
       - name: Copy data
         run: |
           mkdir -p .cache/docker-build/{amd64,arm64}
-          cp target/x86_64-unknown-linux-musl/release/drive-ocr .cache/docker-build/amd64/
-          cp target/aarch64-unknown-linux-musl/release/drive-ocr .cache/docker-build/arm64/
+          cp x86_64-unknown-linux-musl/release/drive-ocr .cache/docker-build/amd64/
+          cp aarch64-unknown-linux-musl/release/drive-ocr .cache/docker-build/arm64/
 
       - name: Build and cache Docker image
         uses: docker/build-push-action@v4
