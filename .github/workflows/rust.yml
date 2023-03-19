@@ -63,16 +63,12 @@ jobs:
         run: |
           make ${{ matrix.step }} ${{ matrix.arch }}
       - name: Save Artifacts
-        if: matrix.save_artifacts == 'true'
+        if: matrix.save_artifacts == true
         uses: actions/upload-artifact@v3
         with:
           name: build-artifacts
           path: |
             target/**/drive-ocr
-
-      - name: Build binaries
-        run: |
-          make copy-all-targets
 
   build-docker:
     runs-on: ubuntu-latest
