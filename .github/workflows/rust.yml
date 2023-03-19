@@ -50,4 +50,7 @@ jobs:
       - name: Build
         run: |
           DOCKER_VERSION=$(echo $GITHUB_REF | sed -e 's|.*/||')
-          make build-docker DOCKER_VERSION=$DOCKER_VERSION
+          make build-docker \
+            DOCKER_VERSION=$DOCKER_VERSION \
+            GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}" \
+            GITHUB_USER="${{ github.actor }}"

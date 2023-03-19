@@ -34,7 +34,7 @@ copy-all-targets: build-all-targets
 	@cp target/aarch64-unknown-linux-musl/release/drive-ocr .cache/docker-build/arm64/
 
 .PHONY = build-docker
-build-docker: copy-all-targets
+build-docker: copy-all-targets .cache/ghcr-login
 	@mkdir -p .cache/docker-build
 	cd .cache/docker-build && \
 	podman build \
@@ -55,4 +55,8 @@ build-docker: copy-all-targets
 .cache/lint-fix: .cache $(RUST_FILES)
 	cargo fmt
 	cargo clippy --fix --allow-staged --allow-dirty
+	@touch $@
+
+.cache/ghcr-login: .cache
+	@echo $(GITHUB_TOKEN) | podman login --username $(GITHUB_USER) --password-stdin ghcr.io
 	@touch $@
