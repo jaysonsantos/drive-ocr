@@ -98,7 +98,10 @@ jobs:
           images: ghcr.io/jaysonantos/drive-ocr
 
       - name: Copy data
-        run: make copy-all-targets
+        run: |
+          mkdir -p .cache/docker-build/{amd64,arm64}
+          cp target/x86_64-unknown-linux-musl/release/drive-ocr .cache/docker-build/amd64/
+          cp target/aarch64-unknown-linux-musl/release/drive-ocr .cache/docker-build/arm64/
 
       - name: Build and cache Docker image
         uses: docker/build-push-action@v4
