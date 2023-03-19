@@ -42,21 +42,51 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - build-image
+    strategy:
+      matrix:
+        step:
+          - lint
+          - test
+        include:
+          - step: make_variables
+            arch: TARGET=release ARCH=x86_64-unknown-linux-musl
+            save_artifacts: true
+          - step: make_variables
+            arch: TARGET=release ARCH=aarch64-unknown-linux-musl
+            save_artifacts: true
     container:
       image: ghcr.io/jaysonsantos/drive-ocr:builder
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      - name: Lint
+      - name: ${{ matrix.step }}
         run: |
-          make lint
-      - name: Test
-        run: |
-          make test
+          make ${{ matrix.step }} ${{ matrix.make_variables }}
+      - name: Save Artifacts
+        if: matrix.save_artifacts == 'true'
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts
+          path: |
+            target/**/drive-ocr
+
       - name: Build binaries
         run: |
           make copy-all-targets
-      - name: Build
+
+  build-docker:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    container:
+      image: ghcr.io/jaysonsantos/drive-ocr:builder
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Build docker image
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifacts
         run: |
           DOCKER_VERSION=$(echo $GITHUB_REF | sed -e 's|.*/||')
           make build-docker \
