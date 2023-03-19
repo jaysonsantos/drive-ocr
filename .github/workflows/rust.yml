@@ -97,6 +97,9 @@ jobs:
         with:
           images: ghcr.io/jaysonantos/drive-ocr
 
+      - name: Copy data
+        run: make copy-all-targets
+
       - name: Build and cache Docker image
         uses: docker/build-push-action@v4
         with:
