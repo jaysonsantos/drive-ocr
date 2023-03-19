@@ -117,15 +117,13 @@ jobs:
       - name: Copy data
         run: |
           find
-          mkdir -p .cache/docker-build/{amd64,arm64}
-          cp x86_64-unknown-linux-musl/release/drive-ocr .cache/docker-build/amd64/
-          cp aarch64-unknown-linux-musl/release/drive-ocr .cache/docker-build/arm64/
+          mkdir -p {amd64,arm64}
+          cp x86_64-unknown-linux-musl/release/drive-ocr amd64/
+          cp aarch64-unknown-linux-musl/release/drive-ocr arm64/
 
       - name: Build and cache Docker image
         uses: docker/build-push-action@v4
         with:
-          context: .cache/docker-build
-          file: ../../Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
