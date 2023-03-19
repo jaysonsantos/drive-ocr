@@ -124,7 +124,8 @@ jobs:
       - name: Build and cache Docker image
         uses: docker/build-push-action@v4
         with:
-          context: .
+          context: .cache/docker-build
+          file: ../../Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
