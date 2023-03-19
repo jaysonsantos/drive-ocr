@@ -1,0 +1,132 @@
+name: Rust Build and Test
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - '*'
+  pull_request:
+
+jobs:
+  build-image:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and cache Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .github
+          push: true
+          tags: ghcr.io/jaysonsantos/drive-ocr:builder
+          cache-from: type=registry,ref=ghcr.io/jaysonsantos/drive-ocr:cache-builder
+          cache-to: type=registry,ref=ghcr.io/jaysonsantos/drive-ocr:cache-builder
+  build:
+    runs-on: ubuntu-latest
+    needs:
+      - build-image
+    strategy:
+      matrix:
+        step:
+          - lint
+          - test
+        include:
+          - step: build-target
+            arch: TARGET=release ARCH=x86_64-unknown-linux-musl
+            save_artifacts: true
+          - step: build-target
+            arch: TARGET=release ARCH=aarch64-unknown-linux-musl
+            save_artifacts: true
+    container:
+      image: ghcr.io/jaysonsantos/drive-ocr:builder
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: /usr/local/cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}-${{ matrix.step }}-${{ matrix.arch }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Cache cargo target
+        uses: actions/cache@v3
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-target-${{ hashFiles('**/Cargo.lock') }}-${{ matrix.step }}-${{ matrix.arch }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-target-
+
+      - name: ${{ matrix.step }}
+        run: |
+          make ${{ matrix.step }} ${{ matrix.arch }}
+      - name: Save Artifacts
+        if: matrix.save_artifacts == true
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts
+          path: |
+            target/**/drive-ocr
+
+  build-docker:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Install Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ghcr.io/jaysonsantos/drive-ocr
+
+      - name: Restore artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifacts
+
+      - name: Copy data
+        run: |
+          find
+          mkdir -p {amd64,arm64}
+          cp x86_64-unknown-linux-musl/release/drive-ocr amd64/
+          cp aarch64-unknown-linux-musl/release/drive-ocr arm64/
+          
+          find {amd64,arm64}/
+
+      - name: Build and cache Docker image
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          context: .
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
