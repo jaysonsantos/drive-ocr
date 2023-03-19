@@ -63,7 +63,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /usr/local/cargo/registry
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}-${{ matrix.step }}-${{ matrix.arch }}
           restore-keys: |
             ${{ runner.os }}-cargo-registry-
 
@@ -71,7 +71,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: target
-          key: ${{ runner.os }}-cargo-target-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-target-${{ hashFiles('**/Cargo.lock') }}-${{ matrix.step }}-${{ matrix.arch }}
           restore-keys: |
             ${{ runner.os }}-cargo-target-
 
@@ -95,10 +95,6 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: build-artifacts
-      - name: List
-        run: |
-          find .
-          pwd
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Install Buildx
@@ -119,6 +115,7 @@ jobs:
 
       - name: Copy data
         run: |
+          find
           mkdir -p .cache/docker-build/{amd64,arm64}
           cp x86_64-unknown-linux-musl/release/drive-ocr .cache/docker-build/amd64/
           cp aarch64-unknown-linux-musl/release/drive-ocr .cache/docker-build/arm64/
