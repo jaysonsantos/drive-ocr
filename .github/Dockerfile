@@ -14,4 +14,4 @@ ENV PATH="/opt/zig:${PATH}"
 RUN rustup toolchain install -t x86_64-unknown-linux-musl,aarch64-unknown-linux-musl -c clippy,rustfmt nightly
 RUN rustup default nightly
 RUN curl -L https://github.com/rust-cross/cargo-zigbuild/releases/download/v0.16.3/cargo-zigbuild-v0.16.3.$(uname -m)-unknown-linux-musl.tar.gz | \
-    tar xvf - -C /usr/local/bin/
+    tar zxvf - -C /usr/local/bin/
