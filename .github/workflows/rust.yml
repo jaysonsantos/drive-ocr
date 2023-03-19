@@ -8,9 +8,6 @@ on:
       - '*'
   pull_request:
 
-env:
-  DOCKER_BUILDKIT: 1
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -23,36 +20,30 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly
-          target: x86_64-unknown-linux-musl
-          components: rustfmt, clippy
-
-      - name: Install dependencies
-        run: |
-          rustup override add nightly
-          rustup target add aarch64-unknown-linux-musl
-          wget https://github.com/sharkdp/fd/releases/download/v8.7.0/fd_8.7.0_amd64.deb -O fd.deb
-          sudo dpkg -i fd.deb
-          wget https://github.com/rust-cross/cargo-zigbuild/releases/download/v0.16.3/cargo-zigbuild-v0.16.3.x86_64-unknown-linux-musl.tar.gz \
-            -O cargo-zigbuild.tar.gz
-          tar zxvf cargo-zigbuild.tar.gz
-          sudo mv cargo-zigbuild /usr/local/bin/
-          sudo apt update
-          sudo apt install -y protobuf-compiler ocrmypdf    
-          sudo snap install zig --classic --edge      
-
       - name: Install Buildx
         uses: docker/setup-buildx-action@v1
 
+      - name: Build and cache Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .github
+          push: false
+          tags: builder
+          cache-from: type=registry,ref=ghcr.io/jaysonsantos/drive-ocr:cache-builder
+          cache-to: type=registry,ref=ghcr.io/jaysonsantos/drive-ocr:cache-builder
+
       - name: Lint
+        uses: docker://builder
         run: |
           make lint
       - name: Test
+        uses: docker://builder
         run: |
           make test
+      - name: Build binaries
+        uses: docker://builder
+        run: |
+          make copy-all-targets
       - name: Build
         run: |
           DOCKER_VERSION=$(echo $GITHUB_REF | sed -e 's|.*/||')

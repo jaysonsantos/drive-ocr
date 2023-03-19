@@ -1,4 +1,5 @@
 RUST_FILES := $(shell fd -e rs -e toml -e lock)
+DOCKER_IMAGE = ghcr.io/jaysonsantos/drive-ocr:$(DOCKER_VERSION)
 
 .PHONY = lint
 lint: .cache/lint
@@ -38,7 +39,7 @@ build-docker: copy-all-targets
 	@cd .cache/docker-build && \
 	docker buildx build \
 		-f ../../Dockerfile \
-		-t ghcr.io/jaysonsantos/drive-ocr:$(DOCKER_VERSION) \
+		-t $(DOCKER_IMAGE) \
 		--push \
 		.
 
