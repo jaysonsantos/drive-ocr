@@ -34,16 +34,16 @@ jobs:
 
       - name: Lint
         uses: docker://builder
-        run: |
-          make lint
+        with:
+          args: make lint
       - name: Test
         uses: docker://builder
-        run: |
-          make test
+        with:
+          args: make test
       - name: Build binaries
         uses: docker://builder
-        run: |
-          make copy-all-targets
+        with:
+          args: make copy-all-targets
       - name: Build
         run: |
           DOCKER_VERSION=$(echo $GITHUB_REF | sed -e 's|.*/||')
