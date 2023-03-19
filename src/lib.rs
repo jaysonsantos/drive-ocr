@@ -105,6 +105,7 @@ async fn run_ocr(
     config: Arc<Config>,
     redis: Arc<Redis>,
 ) -> std::result::Result<impl Reply, Rejection> {
+    info!(monotonic_counter.ocr_call = 1);
     info!(?payload, app = %claim.token_id, "Got payload");
 
     let files = process_input(&payload).await.map_err(Error::Orc)?;
@@ -118,6 +119,7 @@ async fn run_ocr(
         .await
         .map_err(Error::Upload)?;
     cleanup(files).await.map_err(Error::Cleanup)?;
+    info!(monotonic_counter.success_ocr_call = 1);
     Ok("done")
 }
 
