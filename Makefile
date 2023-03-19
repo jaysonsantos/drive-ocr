@@ -1,4 +1,5 @@
 RUST_FILES := $(shell fd -e rs -e toml -e lock)
+DOCKER := $(shell command -v podman docker | head -n 1)
 DOCKER_IMAGE = ghcr.io/jaysonsantos/drive-ocr:$(DOCKER_VERSION)
 
 .PHONY = lint
@@ -37,12 +38,12 @@ copy-all-targets: build-all-targets
 build-docker: copy-all-targets .cache/ghcr-login
 	@mkdir -p .cache/docker-build
 	cd .cache/docker-build && \
-	podman build \
+	$(DOCKER) build \
 		-f ../../Dockerfile \
 		-t $(DOCKER_IMAGE) \
 		--platform linux/amd64,linux/arm64 \
 		.
-	podman push $(DOCKER_IMAGE)
+	$(DOCKER) push $(DOCKER_IMAGE)
 
 .cache:
 	@mkdir $@
