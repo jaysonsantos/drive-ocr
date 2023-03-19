@@ -91,10 +91,6 @@ jobs:
     needs:
       - build
     steps:
-      - name: Restore artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: build-artifacts
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Install Buildx
@@ -112,6 +108,11 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: ghcr.io/jaysonantos/drive-ocr
+
+      - name: Restore artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifacts
 
       - name: Copy data
         run: |
