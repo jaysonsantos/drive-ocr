@@ -36,12 +36,13 @@ copy-all-targets: build-all-targets
 .PHONY = build-docker
 build-docker: copy-all-targets
 	@mkdir -p .cache/docker-build
-	@cd .cache/docker-build && \
-	docker buildx build \
+	cd .cache/docker-build && \
+	podman build \
 		-f ../../Dockerfile \
 		-t $(DOCKER_IMAGE) \
-		--push \
+		--platform linux/amd64,linux/arm64 \
 		.
+	podman push $(DOCKER_IMAGE)
 
 .cache:
 	@mkdir $@
