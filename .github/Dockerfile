@@ -1,5 +1,5 @@
 FROM rust:1-bookworm
-RUN apt update && apt install -y protobuf-compiler ocrmypdf
+RUN apt update && apt install -y protobuf-compiler ocrmypdf nodejs
 RUN curl -Lo zig.tar.xz \
     https://ziglang.org/builds/zig-linux-$(uname -m)-0.11.0-dev.2160+49d37e2d1.tar.xz && \
     mkdir /opt/zig && \
