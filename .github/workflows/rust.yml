@@ -77,6 +77,8 @@ jobs:
     container:
       image: ghcr.io/jaysonsantos/drive-ocr:builder
     steps:
+      - name: Install podman
+        run: sudo install podman -y
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Restore artifacts
