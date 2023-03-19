@@ -48,10 +48,10 @@ jobs:
           - lint
           - test
         include:
-          - step: make_variables
+          - step: build-target
             arch: TARGET=release ARCH=x86_64-unknown-linux-musl
             save_artifacts: true
-          - step: make_variables
+          - step: build-target
             arch: TARGET=release ARCH=aarch64-unknown-linux-musl
             save_artifacts: true
     container:
