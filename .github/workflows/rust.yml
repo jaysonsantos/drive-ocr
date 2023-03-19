@@ -53,8 +53,6 @@ jobs:
       - name: Test
         run: |
           make test
-          DOCKER_VERSION=$(echo $GITHUB_REF | sed -e 's|.*/||')
-          make build-docker DOCKER_VERSION=$DOCKER_VERSION
       - name: Build
         run: |
           DOCKER_VERSION=$(echo $GITHUB_REF | sed -e 's|.*/||')
