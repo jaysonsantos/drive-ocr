@@ -28,7 +28,7 @@ jobs:
         with:
           context: .github
           push: true
-          tags: jaysonsantos/drive-ocr:builder
+          tags: ghcr.io/jaysonsantos/drive-ocr:builder
           cache-from: type=registry,ref=ghcr.io/jaysonsantos/drive-ocr:cache-builder
           cache-to: type=registry,ref=ghcr.io/jaysonsantos/drive-ocr:cache-builder
   build:
