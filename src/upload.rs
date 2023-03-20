@@ -37,8 +37,12 @@ pub async fn upload_files(
         auth,
     );
     for file in files {
+        let upload_file_name = file
+            .file_name()
+            .map(|p| upload_path.join(p))
+            .and_then(|p| p.file_name().map(String::from));
         let google_file = google_drive3::api::File {
-            name: file.file_name().map(|s| s.to_owned()),
+            name: upload_file_name,
             ..Default::default()
         };
         let f = fs::File::open(file).await?;
