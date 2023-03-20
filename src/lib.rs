@@ -11,7 +11,7 @@ use jwt::VerifyWithKey;
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 use tokio_util::sync::CancellationToken;
-use tracing::{error, info, instrument};
+use tracing::{error, info, info_span, instrument, Instrument};
 use url::Url;
 use uuid::Uuid;
 use warp::{Filter, Rejection, Reply};
@@ -100,6 +100,17 @@ async fn verify_token(token: String, key: Arc<Jwt>) -> std::result::Result<Claim
 
 #[instrument(skip_all, ret)]
 async fn run_ocr(
+    claim: Claim,
+    payload: Payload,
+    config: Arc<Config>,
+    redis: Arc<Redis>,
+) -> std::result::Result<impl Reply, Rejection> {
+    tokio::spawn(run_ocr_background(claim, payload, config, redis).instrument(info_span!("queue")));
+    Ok("queued")
+}
+
+#[instrument(skip_all, ret)]
+async fn run_ocr_background(
     claim: Claim,
     payload: Payload,
     config: Arc<Config>,
