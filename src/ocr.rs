@@ -63,6 +63,8 @@ async fn process_file(output_path: &Utf8Path, pdf_path: &Utf8Path) -> Result<Vec
         "-l",
         language.as_str(),
         "--force-ocr",
+        "--rotate-pages",
+        "--deskew",
         pdf_path.as_str(),
         "--sidecar",
         sidecar_file.as_str(),
@@ -93,7 +95,7 @@ fn get_language_from_file(path: &Utf8Path) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use camino::Utf8PathBuf;
-    use color_eyre::Result;
+    use color_eyre::{eyre::WrapErr, Result};
     use tempfile::tempdir;
     use test_case::test_case;
     use tokio::fs;
@@ -103,17 +105,18 @@ mod tests {
     #[test_case("german.deu.pdf" => Some("deu".to_string()))]
     #[test_case("english.eng.pdf" => Some("eng".to_string()))]
     #[test_case("non_matching.pdf" => None)]
-    #[test_case("portuguese.pob.pdf" => Some("pob".to_string()))]
+    #[test_case("portuguese.por.pdf" => Some("por".to_string()))]
     pub fn get_language(language: &str) -> Option<String> {
         let file = Utf8PathBuf::from(language);
         get_language_from_file(&file)
     }
 
+    #[test_case("fixtures/test.pdf")]
+    #[test_case("fixtures/test-rotated.pdf")]
     #[tokio::test]
-    async fn test_ocr_pdf() -> Result<()> {
-        color_eyre::install().ok();
+    async fn test_ocr_pdf(fixture: &str) -> Result<()> {
         let working_dir = Utf8PathBuf::from_path_buf(tempdir()?.into_path()).unwrap();
-        let test_pdf = Utf8PathBuf::from("fixtures/test.pdf");
+        let test_pdf = Utf8PathBuf::from(fixture);
 
         let mut files = process_file(&working_dir, test_pdf.as_path())
             .await?
@@ -124,7 +127,10 @@ mod tests {
         assert!(txt.exists());
 
         let ocred = fs::read_to_string(txt).await?;
-        let expected = fs::read_to_string("fixtures/expected.txt").await?;
+        let expected_file = format!("{fixture}.expected.txt");
+        let expected = fs::read_to_string(&expected_file)
+            .await
+            .wrap_err_with(|| format!("failed to read {expected_file}"))?;
         let distance = strsim::normalized_levenshtein(&ocred, &expected);
         let diff = prettydiff::diff_chars(ocred.as_str(), &expected.as_str());
 
