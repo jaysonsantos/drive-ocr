@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use async_trait::async_trait;
 use google_drive3::oauth2::storage::{TokenInfo, TokenStorage};
 use redis::{AsyncCommands, Client};
@@ -6,7 +8,11 @@ use tracing::instrument;
 use url::Url;
 use uuid::Uuid;
 
-#[derive(Clone)]
+trait Storage<S>: Debug + Clone {
+    fn get_storage_for_uuid() -> S;
+}
+
+#[derive(Debug, Clone)]
 pub struct Redis {
     client: Client,
 }
