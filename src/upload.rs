@@ -4,7 +4,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 use color_eyre::eyre::WrapErr;
 use google_drive3::{hyper, hyper_rustls, oauth2, oauth2::InstalledFlowReturnMethod, DriveHub};
 use tokio::fs;
-use tracing::instrument;
+use tracing::{info, info_span, instrument, Instrument};
 
 use crate::{storage::Redis, Claim, Config};
 
@@ -37,18 +37,21 @@ pub async fn upload_files(
         auth,
     );
     for file in files {
-        let upload_file_name = file
-            .file_name()
-            .map(|p| upload_path.join(p))
-            .and_then(|p| p.file_name().map(String::from));
+        let full_path = upload_path.join(file.file_name().unwrap_or("?"));
+        let full_path = full_path.as_str();
+        info!(full_path, "Uploading file");
         let google_file = google_drive3::api::File {
-            name: upload_file_name,
+            name: file.file_name().map(String::from),
+            parents: Some(vec![upload_path.to_string()]),
             ..Default::default()
         };
         let f = fs::File::open(file).await?;
         let c = hub.files().create(google_file);
+        let span = info_span!("upload_file");
+        span.record("filename", full_path);
         let _ = c
             .upload(f.into_std().await, guess_mime_from_file(file))
+            .instrument(span)
             .await
             .wrap_err("failed to upload file")?;
     }
