@@ -21,9 +21,7 @@ pub fn init() -> Result<()> {
     let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
     let metrics_layer = tracing_opentelemetry::MetricsLayer::new(metrics_controller);
     let error = ErrorLayer::default();
-    let env = EnvFilter::try_from_default_env()
-        .or_else(|_| EnvFilter::try_new("info"))
-        .unwrap();
+    let env = EnvFilter::try_from_default_env().or_else(|_| EnvFilter::try_new("info"))?;
     let stdout = tracing_subscriber::fmt::layer();
     tracing_subscriber::registry()
         .with(env)
