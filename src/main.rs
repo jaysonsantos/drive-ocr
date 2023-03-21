@@ -40,7 +40,7 @@ enum Command {
     GenerateKey,
     #[command(about = "Start a webserver to answer for IFTT's webhooks.")]
     Serve {
-        #[clap(short, long, default_value("127.0.0.1:12345"))]
+        #[clap(short, long, default_value("127.0.0.1:12345"), env)]
         listen_address: String,
     },
 }

@@ -5,3 +5,5 @@ COPY ${TARGETARCH}/drive-ocr /usr/bin/
 RUN chmod +x /usr/bin/drive-ocr
 
 CMD ["/usr/bin/drive-ocr"]
+
+ENV LISTEN_ADDRESS 0.0.0.0:12345
