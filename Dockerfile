@@ -4,6 +4,9 @@ ARG TARGETARCH
 COPY ${TARGETARCH}/drive-ocr /usr/bin/
 RUN chmod +x /usr/bin/drive-ocr
 
-CMD ["/usr/bin/drive-ocr"]
+EXPOSE 12345
+EXPOSE 12346
 
 ENV LISTEN_ADDRESS 0.0.0.0:12345
+ENTRYPOINT ["/usr/bin/drive-ocr"]
+CMD ["serve"]
