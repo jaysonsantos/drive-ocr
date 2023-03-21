@@ -82,7 +82,11 @@ async fn process_file(output_path: &Utf8Path, pdf_path: &Utf8Path) -> Result<Vec
         return Ok(vec![ocred_pdf, sidecar_file]);
     }
     let stderr = String::from_utf8_lossy(&output.stderr);
-    Err(eyre!("ocrymypdf failed").with_section(|| stderr.trim().to_string().header("Stderr:")))
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    Err(eyre!("ocrymypdf failed")
+        .with_section(|| output.status.to_string().header("Status code:"))
+        .with_section(|| stderr.trim().to_string().header("Stderr:"))
+        .with_section(|| stdout.trim().to_string().header("Stdout:")))
 }
 
 fn get_language_from_file(path: &Utf8Path) -> Option<String> {
@@ -132,13 +136,11 @@ mod tests {
             .await
             .wrap_err_with(|| format!("failed to read {expected_file}"))?;
         let distance = strsim::normalized_levenshtein(&ocred, &expected);
-        let diff = prettydiff::diff_chars(ocred.as_str(), &expected.as_str());
+        let diff = prettydiff::diff_chars(ocred.as_str(), expected.as_str());
 
         assert!(
             distance <= 1.0,
-            "ocr file resulted in a great difference than the expected {} {}",
-            distance,
-            diff
+            "ocr file resulted in a great difference than the expected {distance} {diff}"
         );
         Ok(())
     }
