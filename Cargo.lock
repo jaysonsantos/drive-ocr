@@ -609,6 +609,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "camino",
+ "chrono",
  "clap 4.1.11",
  "color-eyre",
  "dotenvy",
@@ -1323,7 +1324,7 @@ checksum = "5b9d9a46eff5b4ff64b45a9e316a6d1e0bc719ef429cbec4dc630684212bfdf9"
 dependencies = [
  "libc",
  "log",
- "wasi",
+ "wasi 0.11.0+wasi-snapshot-preview1",
  "windows-sys 0.45.0",
 ]
 

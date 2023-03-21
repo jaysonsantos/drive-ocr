@@ -86,7 +86,13 @@ where
     let cancelled = cancel_token.cancelled_owned();
     let addr: SocketAddr = listen_address.parse().wrap_err("invalid listen address")?;
     let (addr, server) = warp::serve(health.or(ocr)).bind_with_graceful_shutdown(addr, cancelled);
-    info!(?addr, "Server listening");
+    let git_commit = env!("GIT_COMMIT");
+    let git_branch = env!("GIT_BRANCH");
+    let build_time = env!("BUILD_TIME");
+    info!(
+        ?addr,
+        git_commit, git_branch, build_time, "Server listenings"
+    );
     server.await;
     Ok(())
 }

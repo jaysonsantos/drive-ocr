@@ -44,3 +44,6 @@ warp = "0.3.3"
 [dev-dependencies]
 prettydiff = "0.6.2"
 strsim = "0.10.0"
+
+[build-dependencies]
+chrono = "0.4.24"
