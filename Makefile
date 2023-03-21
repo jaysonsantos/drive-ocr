@@ -28,6 +28,7 @@ test:
 	@cargo test
 
 $(RELEASES): $(RUST_FILES)
+	@rustup target add $(shell echo $@ | cut -d/ -f2)
 	@cargo zigbuild --release --target $(shell echo $@ | cut -d/ -f2)
 	@echo built $@
 
