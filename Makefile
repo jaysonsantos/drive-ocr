@@ -31,6 +31,9 @@ $(RELEASES): $(RUST_FILES)
 	@cargo zigbuild --release --target $(shell echo $@ | cut -d/ -f2)
 	@echo built $@
 
+.PHONY = build-arm
+build-arm: $(RELEASE_ARM)
+build-amd: $(RELEASE_AMD)
 .PHONY = copy-all-targets
 copy-all-targets: .cache/docker-build/arm64/drive-ocr .cache/docker-build/amd64/drive-ocr
 .cache/docker-build/arm64/drive-ocr: $(RELEASE_ARM) .cache
