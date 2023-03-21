@@ -1,4 +1,4 @@
-use std::{net::SocketAddr, sync::Arc};
+use std::{convert::Infallible, net::SocketAddr, sync::Arc};
 
 use camino::Utf8PathBuf;
 use color_eyre::{eyre::WrapErr, Result};
@@ -9,12 +9,13 @@ use hmac::{
 };
 use jwt::VerifyWithKey;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use sha2::Sha256;
 use tokio_util::sync::CancellationToken;
 use tracing::{error, info, info_span, instrument, Instrument};
 use url::Url;
 use uuid::Uuid;
-use warp::{Filter, Rejection, Reply};
+use warp::{http::StatusCode, Filter, Rejection, Reply};
 
 use crate::{
     errors::Error,
@@ -81,6 +82,7 @@ where
         .and(config)
         .and(redis)
         .and_then(run_ocr)
+        .recover(handle_error)
         .with(warp::trace::request());
 
     let cancelled = cancel_token.cancelled_owned();
@@ -98,6 +100,7 @@ where
 }
 
 async fn verify_token(token: String, key: Arc<Jwt>) -> std::result::Result<Claim, Rejection> {
+    info!(monotonic_counter.ocr_call = 1);
     token.verify_with_key(key.as_ref()).map_err(|err| {
         error!(?err, "Invalid token");
         warp::reject::custom(Error::AccessDenied)
@@ -111,6 +114,7 @@ async fn run_ocr(
     config: Arc<Config>,
     redis: Arc<Redis>,
 ) -> std::result::Result<impl Reply, Rejection> {
+    info!("Queueing request");
     tokio::spawn(run_ocr_background(claim, payload, config, redis).instrument(info_span!("queue")));
     Ok("queued")
 }
@@ -122,7 +126,6 @@ async fn run_ocr_background(
     config: Arc<Config>,
     redis: Arc<Redis>,
 ) -> std::result::Result<impl Reply, Rejection> {
-    info!(monotonic_counter.ocr_call = 1);
     info!(?payload, app = %claim.token_id, "Got payload");
 
     let files = process_input(&payload).await.map_err(Error::Orc)?;
@@ -148,4 +151,16 @@ async fn cleanup(files: Vec<Utf8PathBuf>) -> Result<()> {
             .await
             .wrap_err("failed to clean up directory"),
     }
+}
+
+async fn handle_error(_err: Rejection) -> std::result::Result<impl Reply, Infallible> {
+    info!(monotonic_counter.ocr_error_call = 1);
+    let code = StatusCode::INTERNAL_SERVER_ERROR;
+    let message = "Internal Server Error";
+
+    let json = warp::reply::json(&json!({
+        "code": code.as_u16(),
+        "message": message,
+    }));
+    Ok(warp::reply::with_status(json, code))
 }
