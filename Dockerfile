@@ -1,7 +1,7 @@
 FROM debian:unstable-slim
-RUN apt update && apt install ocrmypdf tesseract-ocr-eng tesseract-ocr-por tesseract-ocr-deu netcat-traditional -y
+RUN apt update && apt install ocrmypdf tesseract-ocr-eng tesseract-ocr-por tesseract-ocr-deu netcat-traditional ca-certificates -y
 ARG TARGETARCH
-COPY ${TARGETARCH}/drive-ocr /usr/bin/
+COPY ${TARGETARCH}/ /usr/bin/
 RUN chmod +x /usr/bin/drive-ocr
 
 EXPOSE 12345
