@@ -58,9 +58,10 @@ build-local-docker: .cache/docker-build/arm64/drive-ocr
 	@mkdir -p .cache/docker-build
 	cd .cache/docker-build && \
 	cp ../../Dockerfile . && \
-	$(DOCKER) build \
+	$(DOCKER) buildx build \
 		-t $(DOCKER_IMAGE) \
-		--platform linux/arm64 \
+		--platform $(DOCKER_PLATFORM) \
+		--push \
 		.
 
 .cache:

@@ -8,6 +8,7 @@ use hmac::{
     Hmac, HmacCore,
 };
 use jwt::VerifyWithKey;
+use opentelemetry::trace::SpanKind;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sha2::Sha256;
@@ -107,7 +108,7 @@ async fn verify_token(token: String, key: Arc<Jwt>) -> std::result::Result<Claim
     })
 }
 
-#[instrument(skip_all, ret)]
+#[instrument(skip_all, ret, fields(otel.kind = ?SpanKind::Server))]
 async fn run_ocr(
     claim: Claim,
     payload: Payload,
@@ -163,4 +164,19 @@ async fn handle_error(_err: Rejection) -> std::result::Result<impl Reply, Infall
         "message": message,
     }));
     Ok(warp::reply::with_status(json, code))
+}
+
+#[cfg(test)]
+mod tests {
+    #[tokio::test]
+    async fn double_check_ssl_flags() {
+        assert_eq!(
+            reqwest::get("https://httbin.org/ip")
+                .await
+                .unwrap()
+                .status()
+                .as_u16(),
+            200
+        );
+    }
 }
