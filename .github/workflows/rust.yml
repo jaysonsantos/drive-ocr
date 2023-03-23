@@ -116,8 +116,8 @@ jobs:
         run: |
           find
           mkdir -p {amd64,arm64}
-          cp x86_64-unknown-linux-musl/release/drive-ocr amd64/
-          cp aarch64-unknown-linux-musl/release/drive-ocr arm64/
+          cp x86_64-unknown-linux-gnu/release/drive-ocr amd64/
+          cp aarch64-unknown-linux-gnu/release/drive-ocr arm64/
           
           find {amd64,arm64}/
 
