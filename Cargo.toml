@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.70"
+async-channel = "1.8.0"
 async-trait = "0.1.67"
 camino = { version = "1.1.4", features = ["serde", "serde1"] }
 clap = { version = "4.1.11", features = ["derive", "env"] }
@@ -25,6 +26,7 @@ opentelemetry-semantic-conventions = "0.10.0"
 redis = { version = "0.22.3", features = ["tokio", "aio", "tokio-comp"] }
 regex = "1.7.1"
 reqwest = { version = "0.11.14", features = ["stream", "rustls-tls"], default-features=false }
+rsmq_async = "5.1.3"
 serde = { version = "1.0.155", features = ["derive"] }
 serde_json = "1.0.94"
 sha2 = "0.10.6"

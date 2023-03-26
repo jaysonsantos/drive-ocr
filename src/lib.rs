@@ -1,4 +1,4 @@
-use std::{convert::Infallible, net::SocketAddr, sync::Arc};
+use std::{collections::HashMap, convert::Infallible, net::SocketAddr, sync::Arc};
 
 use camino::Utf8PathBuf;
 use color_eyre::{eyre::WrapErr, Result};
@@ -8,12 +8,16 @@ use hmac::{
     Hmac, HmacCore,
 };
 use jwt::VerifyWithKey;
-use opentelemetry::trace::SpanKind;
+use opentelemetry::{
+    propagation::TextMapPropagator, sdk::propagation::TraceContextPropagator, trace::SpanKind,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sha2::Sha256;
+use tokio::sync::RwLock;
 use tokio_util::sync::CancellationToken;
-use tracing::{error, info, info_span, instrument, Instrument};
+use tracing::{error, info, instrument, Span};
+use tracing_opentelemetry::OpenTelemetrySpanExt;
 use url::Url;
 use uuid::Uuid;
 use warp::{http::StatusCode, Filter, Rejection, Reply};
@@ -21,26 +25,31 @@ use warp::{http::StatusCode, Filter, Rejection, Reply};
 use crate::{
     errors::Error,
     ocr::{process_input, LANGUAGE_REGEX},
+    queue::{Message, Queue},
     storage::Redis,
 };
 
 mod errors;
 pub mod generate_key;
 mod ocr;
+mod queue;
 mod storage;
 pub mod tracing_config;
 mod upload;
+pub mod worker;
+pub use crate::worker::worker;
 
 type Hmac256 = Hmac<Sha256>;
 type Jwt = CoreWrapper<HmacCore<Sha256>>;
 
+#[derive(Debug)]
 pub struct Config {
     pub redis_dsn: Url,
     pub secret_key: String,
     pub google_credentials: ApplicationSecret,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Payload {
     filename: String,
     path: Utf8PathBuf,
@@ -67,12 +76,8 @@ where
     );
     let key = warp::any().map(move || key.clone());
 
-    let redis_dsn = config.redis_dsn.clone();
-    let config = Arc::new(config);
-    let config = warp::any().map(move || config.clone());
-
-    let redis = Arc::new(Redis::from_dsn(redis_dsn));
-    let redis = warp::any().map(move || redis.clone());
+    let queue = Arc::new(RwLock::new(queue::Redis::new(&config).await?));
+    let queue = warp::any().map(move || queue.clone());
 
     let health = warp::path("health").map(|| "OK".to_string());
 
@@ -80,8 +85,7 @@ where
         .and(warp::path::param().and(key).and_then(verify_token))
         .and(warp::body::content_length_limit(1024 * 4))
         .and(warp::body::json::<Payload>())
-        .and(config)
-        .and(redis)
+        .and(queue)
         .and_then(run_ocr)
         .recover(handle_error)
         .with(warp::trace::request());
@@ -108,16 +112,39 @@ async fn verify_token(token: String, key: Arc<Jwt>) -> std::result::Result<Claim
     })
 }
 
-#[instrument(skip_all, ret, fields(otel.kind = ?SpanKind::Server))]
-async fn run_ocr(
+#[instrument(skip_all, fields(otel.kind = ?SpanKind::Server))]
+async fn run_ocr<Q>(
     claim: Claim,
     payload: Payload,
-    config: Arc<Config>,
-    redis: Arc<Redis>,
-) -> std::result::Result<impl Reply, Rejection> {
+    queue: Arc<RwLock<Q>>,
+) -> std::result::Result<impl Reply, Rejection>
+where
+    Q: Queue,
+{
     info!("Queueing request");
-    tokio::spawn(run_ocr_background(claim, payload, config, redis).instrument(info_span!("queue")));
-    Ok("queued")
+    let propagator = TraceContextPropagator::new();
+    let mut properties = HashMap::new();
+    propagator.inject_context(&Span::current().context(), &mut properties);
+    let message_id = Uuid::now_v7();
+
+    let message = Message {
+        id: message_id,
+        properties,
+        payload,
+        claim,
+    };
+
+    match queue.write().await.send(message).await {
+        Ok(_) => {
+            info!(%message_id, "Queued request");
+        }
+        Err(err) => {
+            error!(?err, %message_id, "Failed to queue request");
+            return Err(warp::reject::custom(Error::Queue(err)));
+        }
+    }
+    let response = json!({"status": "queued", "id": message_id});
+    Ok(warp::reply::json(&response))
 }
 
 #[instrument(skip_all, ret)]
@@ -126,8 +153,8 @@ async fn run_ocr_background(
     payload: Payload,
     config: Arc<Config>,
     redis: Arc<Redis>,
-) -> std::result::Result<impl Reply, Rejection> {
-    info!(?payload, app = %claim.token_id, "Got payload");
+) -> Result<()> {
+    info!(app = %claim.token_id, "Got payload");
 
     let files = process_input(&payload).await.map_err(Error::Orc)?;
     let upload_path = payload
@@ -141,7 +168,7 @@ async fn run_ocr_background(
         .map_err(Error::Upload)?;
     cleanup(files).await.map_err(Error::Cleanup)?;
     info!(monotonic_counter.success_ocr_call = 1);
-    Ok("done")
+    Ok(())
 }
 
 #[instrument]

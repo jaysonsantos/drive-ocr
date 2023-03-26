@@ -1,8 +1,8 @@
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
-use color_eyre::Result;
+use color_eyre::{eyre::WrapErr, Result};
 use dotenvy::dotenv;
-use drive_ocr::{generate_key, serve};
+use drive_ocr::{generate_key, serve, worker};
 use google_drive3::oauth2::read_application_secret;
 use opentelemetry::global::shutdown_tracer_provider;
 use tokio::signal::ctrl_c;
@@ -43,6 +43,8 @@ enum Command {
         #[clap(short, long, default_value("127.0.0.1:12345"), env)]
         listen_address: String,
     },
+    #[command(about = "Start a worker to process the queue.")]
+    Worker,
 }
 
 #[tokio::main]
@@ -56,7 +58,14 @@ async fn main() -> Result<()> {
     let lib_config = drive_ocr::Config {
         redis_dsn: config.redis_dsn.clone(),
         secret_key: config.secret_key.clone(),
-        google_credentials: read_application_secret(config.google_credentials).await?,
+        google_credentials: read_application_secret(config.google_credentials.clone())
+            .await
+            .wrap_err_with(|| {
+                format!(
+                    "Failed to load google credentials {}",
+                    config.google_credentials
+                )
+            })?,
     };
     match config.command {
         Command::GenerateKey => {
@@ -75,6 +84,18 @@ async fn main() -> Result<()> {
             });
 
             serve(&config.secret_key, listen_address, lib_config, c).await?;
+        }
+        Command::Worker => {
+            let c = CancellationToken::new();
+
+            let token = c.clone();
+            tokio::spawn(async move {
+                ctrl_c().await.ok();
+                info!("Control-C received");
+                token.cancel();
+            });
+
+            worker(lib_config, c).await?;
         }
     }
     shutdown_tracer_provider();

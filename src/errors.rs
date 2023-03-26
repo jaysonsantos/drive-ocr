@@ -11,6 +11,8 @@ pub enum Error {
     Cleanup(#[source] color_eyre::Report),
     #[error("failed to upload")]
     Upload(#[source] color_eyre::Report),
+    #[error("failed to save into the queue")]
+    Queue(#[source] color_eyre::Report),
 }
 
 impl Reject for Error {}
