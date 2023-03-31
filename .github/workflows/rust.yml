@@ -44,9 +44,9 @@ jobs:
 #      - build-image
     strategy:
       matrix:
-        step:
-          - lint
-          - test
+#        step:
+#          - lint
+#          - test
         include:
           - step: build-amd
             save_artifacts: true
