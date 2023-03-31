@@ -30,16 +30,15 @@ test:
 .cache/rust-installed: .cache
 	@which rustup &> /dev/null || curl https://sh.rustup.rs -sSf | sh -s -- \
 		--default-toolchain nightly -t x86_64-unknown-linux-gnu,aarch64-unknown-linux-gnu -c clippy,rustfmt
-	@rustup override set nightly
 	@touch $@
 
 .cache/cross-installed: .cache/rust-installed
-	@which crosss &> /dev/null || cargo install cross
+	@which cross /dev/null || cargo install cross
 	@touch $@
 
 $(RELEASES): $(RUST_FILES) .cache/cross-installed
 	@rustup target add $(shell echo $@ | cut -d/ -f2)
-	@cargo cross --release --target $(shell echo $@ | cut -d/ -f2)
+	@cross --release --target $(shell echo $@ | cut -d/ -f2)
 	@echo built $@
 
 .PHONY = build-arm
