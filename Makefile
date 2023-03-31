@@ -1,4 +1,4 @@
-RUST_FILES := $(shell fd -e rs -e toml -e lock)
+RUST_FILES := $(find . -iname '*.rs' -o -iname '*.toml' -o -iname '*.lock' | grep -v target/)
 DOCKER := docker
 DOCKER_IMAGE = ghcr.io/jaysonsantos/drive-ocr:$(DOCKER_VERSION)
 
@@ -27,9 +27,17 @@ lint-fix: .cache/lint-fix
 test:
 	@cargo test
 
-$(RELEASES): $(RUST_FILES)
-	@rustup target add $(shell echo $@ | cut -d/ -f2)
-	@cargo zigbuild --release --target $(shell echo $@ | cut -d/ -f2)
+.cache/rust-installed: .cache
+	@which rustup &> /dev/null || curl https://sh.rustup.rs -sSf | sh -s -- \
+		--default-toolchain nightly -t x86_64-unknown-linux-gnu,aarch64-unknown-linux-gnu -c clippy,rustfmt
+	@touch $@
+
+.cache/cross-installed: .cache/rust-installed
+	@which cross /dev/null || cargo install cross
+	@touch $@
+
+$(RELEASES): $(RUST_FILES) .cache/cross-installed
+	@cross build --release --target $(shell echo $@ | cut -d/ -f2)
 	@echo built $@
 
 .PHONY = build-arm
