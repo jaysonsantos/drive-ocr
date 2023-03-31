@@ -25,7 +25,7 @@ opentelemetry-otlp = { version = "0.12.0", features = ["metrics"] }
 opentelemetry-semantic-conventions = "0.11.0"
 redis = { version = "0.22.3", features = ["tokio", "aio", "tokio-comp"] }
 regex = "1.7.3"
-reqwest = { version = "0.11.16", features = ["stream", "rustls-tls"], default-features=false }
+reqwest = { version = "0.11.16", features = ["stream"] }
 rsmq_async = "5.1.3"
 serde = { version = "1.0.159", features = ["derive"] }
 serde_json = "1.0.95"
@@ -41,11 +41,11 @@ tracing-opentelemetry = { features = ["metrics"], git = "https://github.com/jays
 tracing-subscriber = { version = "0.3.16", features = ["fmt", "env-filter"] }
 url = { version = "2.3.1", features = ["serde"] }
 uuid = { version = "1.3.0", features = ["v7", "serde"] }
-warp = "0.3.3"
+warp = { version = "0.3.3", default-features = false }
 
 [dev-dependencies]
 prettydiff = "0.6.2"
 strsim = "0.10.0"
 
 [build-dependencies]
-chrono = "0.4.24"
+chrono = { version = "0.4.24", default-features = false }
