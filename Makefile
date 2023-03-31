@@ -27,9 +27,13 @@ lint-fix: .cache/lint-fix
 test:
 	@cargo test
 
-$(RELEASES): $(RUST_FILES)
+.cache/cross-installed:
+	@which crosss &> /dev/null || cargo install cross
+	@touch $@
+
+$(RELEASES): $(RUST_FILES) .cache/cross-installed
 	@rustup target add $(shell echo $@ | cut -d/ -f2)
-	@cargo zigbuild --release --target $(shell echo $@ | cut -d/ -f2)
+	@cargo cross --release --target $(shell echo $@ | cut -d/ -f2)
 	@echo built $@
 
 .PHONY = build-arm
