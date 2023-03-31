@@ -30,7 +30,7 @@ test:
 .cache/rust-installed: .cache
 	@which rustup &> /dev/null || curl https://sh.rustup.rs -sSf | sh -s -- \
 		--default-toolchain nightly -t x86_64-unknown-linux-gnu,aarch64-unknown-linux-gnu -c clippy,rustfmt
-	@rustup
+	@rustup override set nightly
 	@touch $@
 
 .cache/cross-installed: .cache/rust-installed
