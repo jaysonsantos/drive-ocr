@@ -1,4 +1,4 @@
-RUST_FILES := $(shell fd -e rs -e toml -e lock)
+RUST_FILES := $(find . -iname '*.rs' -o -iname '*.toml' -o -iname '*.lock' | grep -v target/)
 DOCKER := docker
 DOCKER_IMAGE = ghcr.io/jaysonsantos/drive-ocr:$(DOCKER_VERSION)
 
@@ -29,7 +29,7 @@ test:
 
 .cache/rust-installed: .cache
 	@which rustup &> /dev/null || curl https://sh.rustup.rs -sSf | sh -s -- \
-		--default-toolchain nightly -t x86_64-unknown-linux-musl,aarch64-unknown-linux-musl -c clippy,rustfmt
+		--default-toolchain nightly -t x86_64-unknown-linux-gnu,aarch64-unknown-linux-gnu -c clippy,rustfmt
 	@rustup
 	@touch $@
 
