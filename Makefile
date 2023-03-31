@@ -37,8 +37,7 @@ test:
 	@touch $@
 
 $(RELEASES): $(RUST_FILES) .cache/cross-installed
-	@rustup target add $(shell echo $@ | cut -d/ -f2)
-	@cross --release --target $(shell echo $@ | cut -d/ -f2)
+	@cross build --release --target $(shell echo $@ | cut -d/ -f2)
 	@echo built $@
 
 .PHONY = build-arm
