@@ -4,6 +4,7 @@ use opentelemetry::{
     sdk::{export, metrics},
 };
 use opentelemetry_otlp::{new_exporter, new_pipeline};
+use tracing::metadata::LevelFilter;
 use tracing_error::ErrorLayer;
 use tracing_subscriber::{prelude::*, EnvFilter};
 
@@ -24,7 +25,7 @@ pub fn init() -> Result<()> {
     let metrics_layer = tracing_opentelemetry::MetricsLayer::new(metrics_controller);
     let error = ErrorLayer::default();
     let env = EnvFilter::builder()
-        .with_default_directive(LogLevel::INFO.into())
+        .with_default_directive(LevelFilter::INFO.into())
         .from_env_lossy();
     let stdout = tracing_subscriber::fmt::layer();
     tracing_subscriber::registry()
