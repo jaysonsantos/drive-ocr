@@ -27,7 +27,13 @@ lint-fix: .cache/lint-fix
 test:
 	@cargo test
 
-.cache/cross-installed:
+.cache/rust-installed: .cache
+	@which rustup &> /dev/null || curl https://sh.rustup.rs -sSf | sh -s -- \
+		--default-toolchain nightly -t x86_64-unknown-linux-musl,aarch64-unknown-linux-musl -c clippy,rustfmt
+	@rustup
+	@touch $@
+
+.cache/cross-installed: .cache/rust-installed
 	@which crosss &> /dev/null || cargo install cross
 	@touch $@
 
