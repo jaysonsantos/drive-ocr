@@ -8,7 +8,6 @@ use tracing_error::ErrorLayer;
 use tracing_subscriber::{prelude::*, EnvFilter};
 
 pub fn init() -> Result<()> {
-    color_eyre::install()?;
     let tracer = new_pipeline()
         .tracing()
         .with_exporter(new_exporter().tonic())
@@ -24,14 +23,18 @@ pub fn init() -> Result<()> {
     let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
     let metrics_layer = tracing_opentelemetry::MetricsLayer::new(metrics_controller);
     let error = ErrorLayer::default();
-    let env = EnvFilter::try_from_default_env().or_else(|_| EnvFilter::try_new("info"))?;
+    let env = EnvFilter::builder()
+        .with_default_directive(LogLevel::INFO.into())
+        .from_env_lossy();
     let stdout = tracing_subscriber::fmt::layer();
     tracing_subscriber::registry()
+        .with(metrics_layer)
+        .with(otel_layer)
+        .with(stdout)
         .with(env)
         .with(error)
-        .with(stdout)
-        .with(otel_layer)
-        .with(metrics_layer)
         .try_init()
-        .wrap_err("failed to initialize tracing")
+        .wrap_err("failed to initialize tracing")?;
+
+    color_eyre::install()
 }
