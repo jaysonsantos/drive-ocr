@@ -57,22 +57,18 @@ impl Redis {
             .host_str()
             .expect("no host provided")
             .to_string();
-        let port = config.redis_dsn.port().unwrap_or(6379).to_string();
+        let port = config.redis_dsn.port().unwrap_or(6379);
         let db_path: String = config.redis_dsn.path().chars().skip(1).collect();
         let db = db_path
             .parse()
             .wrap_err_with(|| format!("invalid db provided {db_path}"))?;
-        let password = config
-            .redis_dsn
-            .password()
-            .or_else(|| {
-                if config.redis_dsn.username().is_empty() {
-                    None
-                } else {
-                    Some(config.redis_dsn.username())
-                }
-            })
-            .map(String::from);
+        let username = config.redis_dsn.username();
+        let username = if username.is_empty() {
+            None
+        } else {
+            Some(username.to_string())
+        };
+        let password = config.redis_dsn.password().map(String::from);
         let maximum_parallel_messages = 2;
         let namespace = "drive-ocr-local".to_string();
         let options = rsmq_async::RsmqOptions {
@@ -80,6 +76,7 @@ impl Redis {
             port,
             db,
             realtime: true,
+            username,
             password,
             ns: namespace.clone(),
         };

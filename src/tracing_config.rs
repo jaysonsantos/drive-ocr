@@ -1,8 +1,5 @@
 use color_eyre::{eyre::WrapErr, Result};
-use opentelemetry::{
-    runtime,
-    sdk::{export, metrics},
-};
+use opentelemetry::runtime;
 use opentelemetry_otlp::{new_exporter, new_pipeline};
 use tracing::metadata::LevelFilter;
 use tracing_error::ErrorLayer;
@@ -14,11 +11,7 @@ pub fn init() -> Result<()> {
         .with_exporter(new_exporter().tonic())
         .install_batch(runtime::Tokio)?;
     let metrics_controller = new_pipeline()
-        .metrics(
-            metrics::selectors::simple::inexpensive(),
-            export::metrics::aggregation::cumulative_temporality_selector(),
-            opentelemetry::runtime::Tokio,
-        )
+        .metrics(runtime::Tokio)
         .with_exporter(new_exporter().tonic())
         .build()?;
     let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
