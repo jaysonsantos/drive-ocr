@@ -157,7 +157,6 @@ impl Queue for Redis {
                 .await
                 .wrap_err_with(|| format!("Failed to read from queue {}", self.queue_name))?;
             if let Some(message) = message {
-                let message = message;
                 tx.send(message).await?;
             }
 
