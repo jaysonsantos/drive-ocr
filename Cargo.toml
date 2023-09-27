@@ -41,7 +41,7 @@ tracing-opentelemetry = { version = "0.21.0", features = ["metrics"] }
 tracing-subscriber = { version = "0.3.17", features = ["fmt", "env-filter"] }
 url = { version = "2.4.1", features = ["serde"] }
 uuid = { version = "1.4.1", features = ["v7", "serde"] }
-warp = "0.3.5"
+warp = "0.3.6"
 
 [dev-dependencies]
 prettydiff = "0.6.4"
