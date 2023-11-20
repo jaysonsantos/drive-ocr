@@ -40,7 +40,7 @@ tracing-error = "0.2.0"
 tracing-opentelemetry = { version = "0.22.0", features = ["metrics"] }
 tracing-subscriber = { version = "0.3.18", features = ["fmt", "env-filter"] }
 url = { version = "2.4.1", features = ["serde"] }
-uuid = { version = "1.6.0", features = ["v7", "serde"] }
+uuid = { version = "1.6.1", features = ["v7", "serde"] }
 warp = "0.3.6"
 
 [dev-dependencies]
