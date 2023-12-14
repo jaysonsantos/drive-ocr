@@ -78,7 +78,7 @@ jobs:
           make ${{ matrix.step }} ${{ matrix.arch }}
       - name: Save Artifacts
         if: matrix.save_artifacts == true
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
           path: |
