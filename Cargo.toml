@@ -44,7 +44,7 @@ uuid = { version = "1.8.0", features = ["v7", "serde"] }
 warp = "0.3.7"
 
 [dev-dependencies]
-prettydiff = "0.6.4"
+prettydiff = "0.7.0"
 strsim = "0.11.1"
 
 [build-dependencies]
