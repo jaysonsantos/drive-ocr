@@ -26,7 +26,7 @@ opentelemetry-semantic-conventions = "0.15.0"
 redis = { version = "0.25.3", features = ["tokio", "aio", "tokio-comp"] }
 regex = "1.10.4"
 reqwest = { version = "0.12.4", features = ["stream", "rustls-tls"], default-features=false }
-rsmq_async = "10.0.0"
+rsmq_async = "11.0.0"
 serde = { version = "1.0.200", features = ["derive"] }
 serde_json = "1.0.116"
 sha2 = "0.10.8"
