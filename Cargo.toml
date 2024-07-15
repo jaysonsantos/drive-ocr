@@ -20,9 +20,9 @@ hmac = "0.12.1"
 jwt = "0.16.0"
 lazy_static = "1.4.0"
 mime = "0.3.17"
-opentelemetry = { version = "0.23.0", features = ["rt-tokio", "metrics"] }
-opentelemetry-otlp = { version = "0.16.0", features = ["metrics"] }
-opentelemetry-semantic-conventions = "0.15.0"
+opentelemetry = { version = "0.24.0", features = ["rt-tokio", "metrics"] }
+opentelemetry-otlp = { version = "0.17.0", features = ["metrics"] }
+opentelemetry-semantic-conventions = "0.16.0"
 redis = { version = "0.25.3", features = ["tokio", "aio", "tokio-comp"] }
 regex = "1.10.4"
 reqwest = { version = "0.12.4", features = ["stream", "rustls-tls"], default-features=false }
